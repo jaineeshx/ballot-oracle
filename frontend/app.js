@@ -6,7 +6,7 @@
 'use strict';
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const BACKEND_URL = 'https://ballot-oracle-backend-265235104456.us-central1.run.app';
+const BACKEND_URL = 'https://ballot-oracle-backend-jr36jl22ea-uc.a.run.app';
 const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? 'http://localhost:8000/api'
   : `${BACKEND_URL}/api`;
