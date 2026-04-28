@@ -13,7 +13,8 @@ const API = (window.location.hostname === 'localhost' || window.location.hostnam
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const state = {
-  address: '',
+  pin_code: '',
+  state_name: '',
   ballot: null,
   ghostData: null,
   quizQuestions: [],
@@ -148,14 +149,14 @@ function animateLoadingSteps() {
 }
 
 // ── Fetch ballot ──────────────────────────────────────────────────────────────
-async function fetchBallot(address) {
+async function fetchBallot(pin_code, state) {
   showSection('loading');
   animateLoadingSteps();
   try {
     const res = await fetch(`${API}/ballot`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address }),
+      body: JSON.stringify({ pin_code: pin_code, state: state }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     state.ballot = await res.json();
@@ -172,7 +173,7 @@ async function fetchBallot(address) {
 function renderBallot(data) {
   $('ballot-election-date').textContent = data.election_date || 'Election Day 2025';
   $('ballot-polling').textContent = data.polling_location ? `📍 ${data.polling_location}` : '';
-  $('ballot-address-display').textContent = data.address || state.address;
+  $('ballot-address-display').textContent = data.constituency ? `${data.assembly}, ${data.constituency} (${state.pin_code})` : `${state.pin_code}, ${state.state_name}`;
 
   // Vote weight banner
   if (data.vote_weight) {
@@ -484,14 +485,16 @@ function pickArchetypeEmoji(name) {
 
 // ── Reset ─────────────────────────────────────────────────────────────────────
 function resetApp() {
-  state.address = '';
+  state.pin_code = '';
+  state.state_name = '';
   state.ballot = null;
   state.ghostData = null;
   state.quizQuestions = [];
   state.quizAnswers = [];
   state.currentQ = 0;
   state.matchResults = null;
-  $('address-input').value = '';
+  $('pincode-input').value = '';
+  $('state-input').value = '';
   showSection('hero');
 }
 
@@ -500,17 +503,18 @@ function bindEvents() {
   // Address form
   $('address-form').addEventListener('submit', (e) => {
     e.preventDefault();
-    const addr = $('address-input').value.trim();
-    if (!addr || addr.length < 5) { toast('Please enter a full address'); return; }
-    state.address = addr;
-    fetchBallot(addr);
+    const pin = $('pincode-input').value.trim();
+    const st = $('state-input').value.trim();
+    if (!pin || pin.length !== 6) { toast('Please enter a valid 6-digit PIN Code'); return; }
+    if (!st || st.length < 2) { toast('Please enter your State'); return; }
+    state.pin_code = pin;
+    state.state_name = st;
+    fetchBallot(pin, st);
   });
 
   // Ghost voter from ballot banner
   $('btn-ghost-voter').addEventListener('click', () => {
-    // Pre-fill ZIP from address if possible
-    const zipMatch = state.address.match(/\b\d{5}\b/);
-    if (zipMatch) $('ghost-zip').value = zipMatch[0];
+    if (state.pin_code) $('ghost-zip').value = state.pin_code.substring(0, 5);
     showSection('ghost');
   });
 

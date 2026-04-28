@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ballot Oracle — Your Ballot, Decoded</title>
-  <meta name="description" content="Ballot Oracle is your personalized civic intelligence engine. See your exact local ballot, simulate Ghost Voter impact, and match candidates to your values." />
+  <title>VotePath India — Your Election Journey Assistant</title>
+  <meta name="description" content="VotePath India is your personalized civic intelligence engine. See your exact Lok Sabha/Vidhan Sabha ballot, interact with the ECI chatbot, and more." />
   <meta name="keywords" content="vote, ballot, election, civic, democracy, voter guide" />
   <meta name="theme-color" content="#0d0d14" />
   <meta name="robots" content="index, follow" />
-  <meta property="og:title" content="Ballot Oracle — Your Ballot, Decoded" />
-  <meta property="og:description" content="Every other election tool tells you what the ballot says. Ballot Oracle tells you what it means — and what happens if you skip it." />
+  <meta property="og:title" content="VotePath India — Your Election Journey Assistant" />
+  <meta property="og:description" content="Navigate the Indian Elections seamlessly with AI." />
   <meta property="og:type" content="website" />
 
   <!-- Google Fonts -->
@@ -26,8 +26,8 @@
   <!-- ── Navigation ──────────────────────────────────────────────────────── -->
   <nav class="nav" id="main-nav" role="navigation" aria-label="Main navigation">
     <div class="nav__logo">
-      <span class="nav__logo-icon">⚖️</span>
-      <span class="nav__logo-text">Ballot Oracle</span>
+      <span class="nav__logo-icon">🇮🇳</span>
+      <span class="nav__logo-text">VotePath India</span>
     </div>
     <div class="nav__steps" id="nav-steps" aria-hidden="true">
       <span class="nav__step" data-step="ballot">🗳️ Ballot</span>
@@ -50,7 +50,7 @@
     <div class="hero__content">
       <div class="hero__badge">🇺🇸 Civic Intelligence Engine</div>
       <h1 class="hero__title" id="hero-heading">
-        Your ballot.<br />
+        Your Election.<br />
         <span class="hero__title--accent">Decoded.</span>
       </h1>
       <p class="hero__subtitle">
@@ -61,7 +61,7 @@
       <div class="hero__features" aria-label="Features">
         <div class="hero__feature">
           <span class="hero__feature-icon">🗳️</span>
-          <span>Your exact ballot</span>
+          <span>Your exact constituency</span>
         </div>
         <div class="hero__feature">
           <span class="hero__feature-icon">👻</span>
@@ -82,20 +82,29 @@
           <span class="input-group__icon" aria-hidden="true">📍</span>
           <input
             type="text"
-            id="address-input"
+            id="pincode-input"
             class="input-group__field"
-            placeholder="Enter your address — e.g. 123 Main St, Chicago, IL"
-            autocomplete="street-address"
-            aria-label="Your address"
+            placeholder="Enter your 6-digit PIN Code (e.g. 110001)"
+            aria-label="Your PIN Code"
+            aria-required="true"
+            maxlength="6"
+            required
+          />
+          <input
+            type="text"
+            id="state-input"
+            class="input-group__field"
+            placeholder="State (e.g. Delhi)"
+            aria-label="Your State"
             aria-required="true"
             required
           />
-          <button type="submit" class="btn btn--primary" id="btn-get-ballot" aria-label="Get my ballot">
+          <button type="submit" class="btn btn--primary" id="btn-get-ballot" aria-label="Get my constituency">
             <span class="btn__text">Get My Ballot</span>
             <span class="btn__icon" aria-hidden="true">→</span>
           </button>
         </div>
-        <p class="hero__disclaimer">Powered by Groq AI · Deployed on Google Cloud Run. Uses a realistic fictional ballot for demonstration.</p>
+        <p class="hero__disclaimer">Powered by Google Gemini 1.5. Uses official ECI styling for demonstration.</p>
       </form>
     </main>
     </div>
