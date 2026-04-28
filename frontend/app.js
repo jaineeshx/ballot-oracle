@@ -149,14 +149,14 @@ function animateLoadingSteps() {
 }
 
 // ── Fetch ballot ──────────────────────────────────────────────────────────────
-async function fetchBallot(pin_code, state) {
+async function fetchBallot(pin_code, state_name) {
   showSection('loading');
   animateLoadingSteps();
   try {
     const res = await fetch(`${API}/ballot`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin_code: pin_code, state: state }),
+      body: JSON.stringify({ pin_code: pin_code, state: state_name }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     state.ballot = await res.json();
@@ -550,24 +550,74 @@ function bindEvents() {
   });
 }
 
+// ── Chatbot ───────────────────────────────────────────────────────────────────
+function initChatbot() {
+  const toggle  = $('chatbot-toggle');
+  const panel   = $('chatbot-panel');
+  const closeBtn = $('chatbot-close');
+  const sendBtn = $('chatbot-send');
+  const input   = $('chatbot-input');
+  const msgs    = $('chatbot-messages');
+  const langSel = $('chatbot-lang');
+
+  function addMsg(text, type) {
+    const div = el('div', `chatbot__msg chatbot__msg--${type}`, text);
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    return div;
+  }
+
+  toggle.addEventListener('click', () => {
+    const open = panel.hidden;
+    panel.hidden = !open;
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (typeof trackEvent !== 'undefined') trackEvent('chatbot_open', 'Engagement', 'ECI Chatbot');
+  });
+
+  closeBtn.addEventListener('click', () => {
+    panel.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+  });
+
+  async function sendMessage() {
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    addMsg(msg, 'user');
+    const loading = addMsg('Thinking…', 'bot chatbot__msg--loading');
+    try {
+      const res = await fetch(`${API}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg, language: langSel.value }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      loading.remove();
+      addMsg(data.answer, 'bot');
+      if (data.sentiment === 'Frustrated') addMsg('😔 I sense some frustration. Please call the Voter Helpline at 1950 for direct assistance.', 'bot');
+    } catch (err) {
+      loading.remove();
+      addMsg(`Sorry, I couldn't reach the server: ${err.message}`, 'bot');
+    }
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 function init() {
   showSection('hero');
   initCanvas();
   bindEvents();
+  initChatbot();
 
   // Verify backend health
   fetch(`${API}/health`)
     .then(r => r.json())
-    .then(d => {
-      if (d.status === 'ok') {
-        console.info(`✅ Ballot Oracle backend: ${d.model}`);
-      }
-    })
-    .catch(() => {
-      toast('⚠️ Backend offline — make sure the server is running');
-    });
+    .then(d => { if (d.status === 'ok') console.info(`✅ VotePath India backend: ${d.primary_ai}`); })
+    .catch(() => { toast('⚠️ Backend offline — make sure the server is running'); });
 }
 
 document.addEventListener('DOMContentLoaded', init);
-

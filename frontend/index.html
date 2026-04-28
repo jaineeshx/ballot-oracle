@@ -18,7 +18,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="style.css" />
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-VOTEPATH01"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-VOTEPATH01', { page_title: 'VotePath India', anonymize_ip: true });
+    function trackEvent(action, category, label) {
+      gtag('event', action, { event_category: category, event_label: label });
+    }
+  </script>
 </head>
+
 <body>
   <!-- Skip navigation for screen readers -->
   <a href="#main-content" class="skip-nav">Skip to main content</a>
@@ -359,6 +372,35 @@
   <!-- ── Toast ────────────────────────────────────────────────────────────── -->
   <div class="toast" id="toast" role="alert" aria-live="assertive" aria-atomic="true"></div>
 
+  <!-- ── ECI AI Chatbot Widget ─────────────────────────────────────────────── -->
+  <div id="chatbot-widget" class="chatbot" aria-label="ECI Election Assistant">
+    <button class="chatbot__toggle" id="chatbot-toggle" aria-label="Open ECI AI Assistant" aria-expanded="false">
+      🗳️ <span>Ask ECI AI</span>
+    </button>
+    <div class="chatbot__panel" id="chatbot-panel" hidden role="dialog" aria-label="Election Commission of India AI Assistant">
+      <div class="chatbot__header">
+        <span>🇮🇳 ECI Election Assistant</span>
+        <button class="chatbot__close" id="chatbot-close" aria-label="Close chatbot">✕</button>
+      </div>
+      <div class="chatbot__messages" id="chatbot-messages" aria-live="polite">
+        <div class="chatbot__msg chatbot__msg--bot">Jai Hind! 🙏 I'm your ECI AI Assistant. Ask me anything about Indian elections — voter registration, booth location, Form 6, EVM usage, and more!</div>
+      </div>
+      <div class="chatbot__input-row">
+        <select id="chatbot-lang" class="chatbot__lang" aria-label="Select response language">
+          <option value="english">English</option>
+          <option value="hindi">हिंदी</option>
+          <option value="tamil">தமிழ்</option>
+          <option value="bengali">বাংলা</option>
+          <option value="marathi">मराठी</option>
+          <option value="telugu">తెలుగు</option>
+        </select>
+        <input type="text" id="chatbot-input" class="chatbot__input" placeholder="Ask about voter registration…" aria-label="Your election question" maxlength="500" />
+        <button id="chatbot-send" class="chatbot__send" aria-label="Send message">➤</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
+
 </html>
