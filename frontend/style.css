@@ -54,6 +54,23 @@ button { cursor: pointer; border: none; background: none; font: inherit; }
 input, select { font: inherit; }
 img { max-width: 100%; display: block; }
 
+/* ── Accessibility ────────────────────────────────────────────────────────────── */
+.skip-nav {
+  position: absolute; top: -100%; left: 1rem;
+  background: var(--brand); color: #fff;
+  padding: 0.6rem 1.2rem; border-radius: var(--radius);
+  font-weight: 700; font-size: 0.9rem; z-index: 9999;
+  transition: top 0.2s;
+}
+.skip-nav:focus { top: 1rem; }
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+
 /* ── Nav ─────────────────────────────────────────────────────────────────────── */
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
