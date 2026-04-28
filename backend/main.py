@@ -1,6 +1,6 @@
 """
 Ballot Oracle — FastAPI Backend
-Powered by Google Gemini 2.0 Flash
+Powered by Groq & Llama 3
 """
 
 import os
@@ -9,7 +9,7 @@ import logging
 from typing import Optional
 from contextlib import asynccontextmanager
 
-import google.generativeai as genai
+from groq import Groq
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -21,17 +21,16 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ballot-oracle")
 
-# ── Gemini setup ───────────────────────────────────────────────────────────────
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-MODEL_NAME = "gemini-2.0-flash"
+# ── Groq setup ───────────────────────────────────────────────────────────────
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+MODEL_NAME = "llama-3.3-70b-versatile"
 
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    gemini_model = genai.GenerativeModel(MODEL_NAME)
-    logger.info(f"Gemini configured with model: {MODEL_NAME}")
+if GROQ_API_KEY:
+    groq_client = Groq(api_key=GROQ_API_KEY)
+    logger.info(f"Groq configured with model: {MODEL_NAME}")
 else:
-    gemini_model = None
-    logger.warning("GEMINI_API_KEY not set — AI features will return mock data")
+    groq_client = None
+    logger.warning("GROQ_API_KEY not set — AI features will return mock data")
 
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:8080,http://localhost:3000").split(",")
 
@@ -45,7 +44,7 @@ async def lifespan(app: FastAPI):
 # ── App ────────────────────────────────────────────────────────────────────────
 app = FastAPI(
     title="Ballot Oracle API",
-    description="Personalized Civic Intelligence powered by Google Gemini",
+    description="Personalized Civic Intelligence powered by Groq & Llama 3",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -76,25 +75,26 @@ class RippleRequest(BaseModel):
     candidate: str
     district: str = ""
 
-# ── Gemini helper ──────────────────────────────────────────────────────────────
-async def ask_gemini(prompt: str, expect_json: bool = True) -> str:
-    if not gemini_model:
-        raise HTTPException(status_code=503, detail="Gemini API key not configured")
+# ── Groq helper ──────────────────────────────────────────────────────────────
+async def ask_groq(prompt: str, expect_json: bool = True) -> str:
+    if not groq_client:
+        raise HTTPException(status_code=503, detail="Groq API key not configured")
     try:
         full_prompt = prompt
         if expect_json:
             full_prompt += "\n\nIMPORTANT: Respond ONLY with valid JSON. No markdown fences, no explanation."
-        response = gemini_model.generate_content(
-            full_prompt,
-            generation_config=genai.types.GenerationConfig(
-                temperature=0.7,
-                max_output_tokens=2048,
-            ),
+        
+        response = groq_client.chat.completions.create(
+            messages=[{"role": "user", "content": full_prompt}],
+            model=MODEL_NAME,
+            temperature=0.7,
+            max_tokens=2048,
+            response_format={"type": "json_object"} if expect_json else None
         )
-        return response.text.strip()
+        return response.choices[0].message.content.strip()
     except Exception as e:
-        logger.error(f"Gemini error: {e}")
-        raise HTTPException(status_code=502, detail=f"Gemini API error: {str(e)}")
+        logger.error(f"Groq error: {e}")
+        raise HTTPException(status_code=502, detail=f"Groq API error: {str(e)}")
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
@@ -103,7 +103,7 @@ async def health():
     return {
         "status": "ok",
         "model": MODEL_NAME,
-        "gemini_configured": bool(GEMINI_API_KEY),
+        "groq_configured": bool(GROQ_API_KEY),
     }
 
 
@@ -185,7 +185,7 @@ Create a ballot with exactly these sections and return as JSON:
 
 Make all names, places, and numbers realistic and specific. The address context should influence the state/city details.
 """
-    raw = await ask_gemini(prompt)
+    raw = await ask_groq(prompt)
     try:
         # Strip any accidental markdown fences
         raw = raw.replace("```json", "").replace("```", "").strip()
@@ -193,7 +193,7 @@ Make all names, places, and numbers realistic and specific. The address context 
         return data
     except json.JSONDecodeError:
         logger.error(f"JSON parse error for ballot response: {raw[:500]}")
-        raise HTTPException(status_code=502, detail="Failed to parse ballot data from Gemini")
+        raise HTTPException(status_code=502, detail="Failed to parse ballot data from Groq")
 
 
 @app.post("/api/ghost-voter")
@@ -244,7 +244,7 @@ Return this exact JSON structure:
 
 Use realistic numbers consistent with actual demographic data for that region. Be specific and dramatic but factually plausible.
 """
-    raw = await ask_gemini(prompt)
+    raw = await ask_groq(prompt)
     raw = raw.replace("```json", "").replace("```", "").strip()
     try:
         return json.loads(raw)
@@ -287,7 +287,7 @@ Return this exact JSON:
 
 Generate all 10 questions. Make them thoughtful, non-leading, and genuinely reveal values.
 """
-    raw = await ask_gemini(prompt)
+    raw = await ask_groq(prompt)
     raw = raw.replace("```json", "").replace("```", "").strip()
     try:
         return json.loads(raw)
@@ -346,7 +346,7 @@ Return this exact JSON:
 
 Do not use red/blue framing. Focus purely on values alignment.
 """
-    raw = await ask_gemini(prompt)
+    raw = await ask_groq(prompt)
     raw = raw.replace("```json", "").replace("```", "").strip()
     try:
         return json.loads(raw)
@@ -407,7 +407,7 @@ Return this exact JSON:
 
 Be specific, grounded, and avoid political spin. Focus on tangible daily life effects.
 """
-    raw = await ask_gemini(prompt)
+    raw = await ask_groq(prompt)
     raw = raw.replace("```json", "").replace("```", "").strip()
     try:
         return json.loads(raw)
