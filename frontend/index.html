@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ballot Oracle — Your Ballot, Decoded</title>
+  <meta name="description" content="Ballot Oracle is your personalized civic intelligence engine. See your exact local ballot, simulate Ghost Voter impact, and match candidates to your values." />
+  <meta name="keywords" content="vote, ballot, election, civic, democracy, voter guide" />
+  <meta property="og:title" content="Ballot Oracle — Your Ballot, Decoded" />
+  <meta property="og:description" content="Every other election tool tells you what the ballot says. Ballot Oracle tells you what it means — and what happens if you skip it." />
+  <meta property="og:type" content="website" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── Navigation ──────────────────────────────────────────────────────── -->
+  <nav class="nav" id="main-nav" role="navigation" aria-label="Main navigation">
+    <div class="nav__logo">
+      <span class="nav__logo-icon">⚖️</span>
+      <span class="nav__logo-text">Ballot Oracle</span>
+    </div>
+    <div class="nav__steps" id="nav-steps" aria-hidden="true">
+      <span class="nav__step" data-step="ballot">🗳️ Ballot</span>
+      <span class="nav__sep">→</span>
+      <span class="nav__step" data-step="ghost">👻 Ghost Voter</span>
+      <span class="nav__sep">→</span>
+      <span class="nav__step" data-step="quiz">🧬 Civic DNA</span>
+      <span class="nav__sep">→</span>
+      <span class="nav__step" data-step="results">✨ Your Match</span>
+    </div>
+    <button class="nav__restart btn btn--ghost" id="btn-restart" aria-label="Start over">Start Over</button>
+  </nav>
+
+  <!-- ── SECTION: Hero ───────────────────────────────────────────────────── -->
+  <section class="section section--hero active" id="section-hero" aria-labelledby="hero-heading">
+    <div class="hero__bg">
+      <canvas id="hero-canvas" aria-hidden="true"></canvas>
+    </div>
+    <div class="hero__content">
+      <div class="hero__badge">🇺🇸 Civic Intelligence Engine</div>
+      <h1 class="hero__title" id="hero-heading">
+        Your ballot.<br />
+        <span class="hero__title--accent">Decoded.</span>
+      </h1>
+      <p class="hero__subtitle">
+        Every other election tool tells you what the ballot says.<br />
+        <strong>We tell you what it means — and what happens if you skip it.</strong>
+      </p>
+
+      <div class="hero__features" aria-label="Features">
+        <div class="hero__feature">
+          <span class="hero__feature-icon">🗳️</span>
+          <span>Your exact ballot</span>
+        </div>
+        <div class="hero__feature">
+          <span class="hero__feature-icon">👻</span>
+          <span>Ghost Voter impact</span>
+        </div>
+        <div class="hero__feature">
+          <span class="hero__feature-icon">🧬</span>
+          <span>Values-based matching</span>
+        </div>
+        <div class="hero__feature">
+          <span class="hero__feature-icon">🌊</span>
+          <span>Ripple Effect analysis</span>
+        </div>
+      </div>
+
+      <form class="hero__form" id="address-form" aria-label="Address lookup form">
+        <div class="input-group">
+          <span class="input-group__icon" aria-hidden="true">📍</span>
+          <input
+            type="text"
+            id="address-input"
+            class="input-group__field"
+            placeholder="Enter your address — e.g. 123 Main St, Chicago, IL"
+            autocomplete="street-address"
+            aria-label="Your address"
+            aria-required="true"
+            required
+          />
+          <button type="submit" class="btn btn--primary" id="btn-get-ballot" aria-label="Get my ballot">
+            <span class="btn__text">Get My Ballot</span>
+            <span class="btn__icon" aria-hidden="true">→</span>
+          </button>
+        </div>
+        <p class="hero__disclaimer">Powered by Google Gemini. Uses a realistic fictional ballot for demonstration.</p>
+      </form>
+    </div>
+
+    <!-- Floating stat cards -->
+    <div class="hero__stats" aria-hidden="true">
+      <div class="stat-card stat-card--1">
+        <div class="stat-card__number">847</div>
+        <div class="stat-card__label">votes decided your last city council race</div>
+      </div>
+      <div class="stat-card stat-card--2">
+        <div class="stat-card__number">34%</div>
+        <div class="stat-card__label">of 25–35 year olds voted in 2022</div>
+      </div>
+      <div class="stat-card stat-card--3">
+        <div class="stat-card__number">6</div>
+        <div class="stat-card__label">races on your ballot you don't know about</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SECTION: Loading ────────────────────────────────────────────────── -->
+  <section class="section section--loading" id="section-loading" aria-live="polite" aria-label="Loading ballot">
+    <div class="loading__container">
+      <div class="loading__orb" aria-hidden="true"></div>
+      <h2 class="loading__title">Analyzing your ballot…</h2>
+      <p class="loading__subtitle" id="loading-message">Resolving your district from address</p>
+      <div class="loading__steps" aria-hidden="true">
+        <div class="loading__step active" id="lstep-1">📍 Resolving address</div>
+        <div class="loading__step" id="lstep-2">🗳️ Fetching ballot races</div>
+        <div class="loading__step" id="lstep-3">🧠 Gemini narrating each race</div>
+        <div class="loading__step" id="lstep-4">📊 Calculating vote weight</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SECTION: Ballot ─────────────────────────────────────────────────── -->
+  <section class="section section--ballot" id="section-ballot" aria-labelledby="ballot-heading">
+    <div class="section__container">
+      <div class="ballot__header">
+        <div class="ballot__meta">
+          <span class="ballot__tag" id="ballot-election-date">Election Day 2025</span>
+          <span class="ballot__location" id="ballot-polling"></span>
+        </div>
+        <h2 class="ballot__title" id="ballot-heading">Your Official Ballot</h2>
+        <p class="ballot__address" id="ballot-address-display"></p>
+      </div>
+
+      <!-- Vote Weight Banner -->
+      <div class="vote-weight-banner" id="vote-weight-banner" aria-label="Vote weight information">
+        <div class="vote-weight-banner__icon">⚖️</div>
+        <div class="vote-weight-banner__content">
+          <div class="vote-weight-banner__stat" id="vw-stat">847 votes</div>
+          <div class="vote-weight-banner__text" id="vw-text">decided your last council race. You are statistically one of them.</div>
+        </div>
+        <button class="btn btn--ghost btn--sm" id="btn-ghost-voter" aria-label="Simulate Ghost Voter impact">
+          👻 See Ghost Voter Impact
+        </button>
+      </div>
+
+      <!-- Ballot Races Grid -->
+      <div class="ballot__grid" id="ballot-grid" aria-label="Ballot races" role="list">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Next CTA -->
+      <div class="ballot__cta">
+        <button class="btn btn--primary btn--lg" id="btn-to-quiz" aria-label="Take the Civic DNA quiz">
+          Take the Civic DNA Quiz
+          <span aria-hidden="true">🧬</span>
+        </button>
+        <p class="ballot__cta-note">10 questions. No party labels. Pure values.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SECTION: Ghost Voter ────────────────────────────────────────────── -->
+  <section class="section section--ghost" id="section-ghost" aria-labelledby="ghost-heading">
+    <div class="section__container">
+      <div class="ghost__header">
+        <div class="ghost__badge">👻 Ghost Voter Mode</div>
+        <h2 class="ghost__title" id="ghost-heading">What If Everyone Like You Had Voted?</h2>
+        <p class="ghost__subtitle">Real demographic math. Real races. The counterfactual that should haunt you.</p>
+      </div>
+
+      <!-- Zip + Age input -->
+      <div class="ghost__form-row">
+        <div class="ghost__form-group">
+          <label for="ghost-zip" class="form-label">ZIP Code</label>
+          <input type="text" id="ghost-zip" class="input" placeholder="e.g. 60601" maxlength="5" aria-label="ZIP code" />
+        </div>
+        <div class="ghost__form-group">
+          <label for="ghost-age" class="form-label">Your Age Group</label>
+          <select id="ghost-age" class="input" aria-label="Age group">
+            <option value="18-24">18–24</option>
+            <option value="25-35" selected>25–35</option>
+            <option value="36-45">36–45</option>
+            <option value="46-55">46–55</option>
+          </select>
+        </div>
+        <button class="btn btn--accent" id="btn-run-ghost" aria-label="Run Ghost Voter simulation">
+          Run Simulation →
+        </button>
+      </div>
+
+      <!-- Ghost Result -->
+      <div class="ghost__result" id="ghost-result" hidden aria-live="polite">
+        <div class="ghost__headline" id="ghost-headline"></div>
+        <div class="ghost__summary" id="ghost-summary"></div>
+
+        <!-- Turnout Chart -->
+        <div class="ghost__chart" aria-label="Voter turnout comparison chart">
+          <div class="ghost__chart-title">Voter Turnout: Then vs. What Could Have Been</div>
+          <div class="ghost__bars">
+            <div class="ghost__bar-group">
+              <div class="ghost__bar-label">Ages 65+ (actual)</div>
+              <div class="ghost__bar-track">
+                <div class="ghost__bar ghost__bar--actual" id="bar-senior" style="width:0%" role="progressbar" aria-label="Seniors turnout"></div>
+                <span class="ghost__bar-value" id="bar-senior-val">71%</span>
+              </div>
+            </div>
+            <div class="ghost__bar-group">
+              <div class="ghost__bar-label" id="bar-young-label">Ages 25–35 (actual)</div>
+              <div class="ghost__bar-track">
+                <div class="ghost__bar ghost__bar--low" id="bar-young" style="width:0%" role="progressbar" aria-label="Young voter turnout"></div>
+                <span class="ghost__bar-value" id="bar-young-val">34%</span>
+              </div>
+            </div>
+            <div class="ghost__bar-group ghost__bar-group--ghost">
+              <div class="ghost__bar-label" id="bar-ghost-label">Ages 25–35 (if equal turnout)</div>
+              <div class="ghost__bar-track">
+                <div class="ghost__bar ghost__bar--ghost" id="bar-ghost" style="width:0%" role="progressbar" aria-label="Ghost voter turnout"></div>
+                <span class="ghost__bar-value" id="bar-ghost-val">71%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flipped races -->
+        <div class="ghost__flips" id="ghost-flips" aria-label="Races that would have flipped"></div>
+
+        <div class="ghost__hook" id="ghost-hook"></div>
+
+        <!-- CTA -->
+        <button class="btn btn--primary btn--lg" id="btn-ghost-to-quiz" aria-label="Continue to values quiz">
+          Take the Civic DNA Quiz →
+        </button>
+      </div>
+
+      <!-- Ghost loading -->
+      <div class="ghost__loading" id="ghost-loading" hidden aria-live="polite">
+        <div class="loading__orb loading__orb--sm" aria-hidden="true"></div>
+        <p>Running demographic simulation with Gemini…</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SECTION: Quiz ───────────────────────────────────────────────────── -->
+  <section class="section section--quiz" id="section-quiz" aria-labelledby="quiz-heading">
+    <div class="section__container">
+      <div class="quiz__header">
+        <div class="quiz__badge">🧬 Civic DNA</div>
+        <h2 class="quiz__title" id="quiz-heading">10 Questions. No Party Labels. Pure Values.</h2>
+        <p class="quiz__subtitle">We match you to candidates based on what you actually believe — not your party.</p>
+        <div class="quiz__progress-bar" role="progressbar" aria-label="Quiz progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="10">
+          <div class="quiz__progress-fill" id="quiz-progress"></div>
+        </div>
+        <div class="quiz__progress-text" id="quiz-progress-text">Question 1 of 10</div>
+      </div>
+
+      <!-- Quiz loading state -->
+      <div id="quiz-loading" aria-live="polite">
+        <div class="loading__orb loading__orb--sm" aria-hidden="true"></div>
+        <p style="text-align:center;color:var(--text-muted)">Loading questions from Gemini…</p>
+      </div>
+
+      <!-- Question card -->
+      <div class="quiz__card" id="quiz-card" hidden>
+        <div class="quiz__q-number" id="quiz-q-number" aria-live="polite">Q1</div>
+        <p class="quiz__question" id="quiz-question"></p>
+        <div class="quiz__dimension" id="quiz-dimension"></div>
+        <div class="quiz__options" id="quiz-options" role="group" aria-label="Answer choices"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SECTION: Results ────────────────────────────────────────────────── -->
+  <section class="section section--results" id="section-results" aria-labelledby="results-heading">
+    <div class="section__container">
+      <div class="results__header">
+        <div class="results__badge">✨ Your Civic DNA</div>
+        <h2 class="results__title" id="results-heading">Your Values Profile</h2>
+      </div>
+
+      <!-- Loading -->
+      <div id="results-loading" hidden aria-live="polite">
+        <div class="loading__orb loading__orb--sm" aria-hidden="true"></div>
+        <p style="text-align:center;color:var(--text-muted)">Gemini is matching your values to candidates…</p>
+      </div>
+
+      <!-- Profile card -->
+      <div id="results-content" hidden>
+        <div class="profile-card">
+          <div class="profile-card__archetype" id="profile-archetype"></div>
+          <div class="profile-card__name" id="profile-name"></div>
+          <div class="profile-card__desc" id="profile-desc"></div>
+          <div class="profile-card__values">
+            <div class="profile-card__value">
+              <span class="profile-card__value-label">Primary Value</span>
+              <span class="profile-card__value-text" id="profile-primary"></span>
+            </div>
+            <div class="profile-card__value">
+              <span class="profile-card__value-label">Secondary Value</span>
+              <span class="profile-card__value-text" id="profile-secondary"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Candidate matches -->
+        <h3 class="results__section-title">Your Candidate Alignment</h3>
+        <div class="matches-grid" id="matches-grid" aria-label="Candidate alignment scores" role="list"></div>
+
+        <!-- Final CTA -->
+        <div class="results__cta">
+          <h3>Your civic journey starts here.</h3>
+          <p>Find your polling location, check registration status, and make your plan.</p>
+          <div class="results__cta-buttons">
+            <a href="https://vote.gov" target="_blank" rel="noopener noreferrer" class="btn btn--primary" id="btn-vote-gov">
+              🇺🇸 Check Registration at Vote.gov
+            </a>
+            <button class="btn btn--ghost" id="btn-start-over-results">Start Over</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Ripple Effect Modal ─────────────────────────────────────────────── -->
+  <div class="modal-overlay" id="ripple-modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="ripple-modal-title">
+    <div class="modal">
+      <button class="modal__close" id="btn-close-ripple" aria-label="Close ripple effect panel">✕</button>
+      <div class="modal__badge">🌊 Ripple Effect</div>
+      <h3 class="modal__title" id="ripple-modal-title"></h3>
+      <div class="modal__loading" id="ripple-loading" aria-live="polite">
+        <div class="loading__orb loading__orb--sm" aria-hidden="true"></div>
+        <p>Gemini is analyzing the impact on your daily life…</p>
+      </div>
+      <div class="modal__content" id="ripple-content" hidden></div>
+    </div>
+  </div>
+
+  <!-- ── Toast ────────────────────────────────────────────────────────────── -->
+  <div class="toast" id="toast" role="alert" aria-live="assertive" aria-atomic="true"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

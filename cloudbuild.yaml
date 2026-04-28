@@ -1,0 +1,86 @@
+steps:
+  # ── 1. Build Backend Image ────────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build-backend
+    args:
+      - build
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/ballot-oracle/backend:$COMMIT_SHA
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/ballot-oracle/backend:latest
+      - ./backend
+
+  # ── 2. Build Frontend Image ───────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build-frontend
+    args:
+      - build
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/ballot-oracle/frontend:$COMMIT_SHA
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/ballot-oracle/frontend:latest
+      - ./frontend
+
+  # ── 3. Push Backend ───────────────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: push-backend
+    args:
+      - push
+      - --all-tags
+      - us-central1-docker.pkg.dev/$PROJECT_ID/ballot-oracle/backend
+    waitFor: [build-backend]
+
+  # ── 4. Push Frontend ──────────────────────────────────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    id: push-frontend
+    args:
+      - push
+      - --all-tags
+      - us-central1-docker.pkg.dev/$PROJECT_ID/ballot-oracle/frontend
+    waitFor: [build-frontend]
+
+  # ── 5. Deploy Backend to Cloud Run ───────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: deploy-backend
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ballot-oracle-backend
+      - --image=us-central1-docker.pkg.dev/$PROJECT_ID/ballot-oracle/backend:$COMMIT_SHA
+      - --region=us-central1
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=8000
+      - --memory=512Mi
+      - --cpu=1
+      - --min-instances=0
+      - --max-instances=5
+      - --set-secrets=GEMINI_API_KEY=GEMINI_API_KEY:latest
+    waitFor: [push-backend]
+
+  # ── 6. Deploy Frontend to Cloud Run ──────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: deploy-frontend
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ballot-oracle-frontend
+      - --image=us-central1-docker.pkg.dev/$PROJECT_ID/ballot-oracle/frontend:$COMMIT_SHA
+      - --region=us-central1
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=8080
+      - --memory=256Mi
+      - --cpu=1
+      - --min-instances=0
+      - --max-instances=3
+    waitFor: [push-frontend]
+
+images:
+  - us-central1-docker.pkg.dev/$PROJECT_ID/ballot-oracle/backend:$COMMIT_SHA
+  - us-central1-docker.pkg.dev/$PROJECT_ID/ballot-oracle/frontend:$COMMIT_SHA
+
+options:
+  logging: CLOUD_LOGGING_ONLY
