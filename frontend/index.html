@@ -183,6 +183,64 @@
         <!-- Populated by JS -->
       </div>
 
+      <!-- Voting Day Toolkit -->
+      <div class="toolkit">
+        <h3 class="toolkit__title">🛠️ Voting Day Toolkit</h3>
+        
+        <!-- Maps Locator -->
+        <div class="toolkit__map">
+          <h4>📍 Your Polling Station</h4>
+          <p id="map-address">Address will appear here</p>
+          <div class="map-container" id="map-container">
+            <!-- Iframe injected via JS -->
+          </div>
+        </div>
+
+        <!-- Fact Checker -->
+        <div class="toolkit__card">
+          <h4>🕵️ ECI Fact-Checker</h4>
+          <p>Paste a WhatsApp forward or rumor to verify it.</p>
+          <div class="input-row">
+            <input type="text" id="fact-input" class="input" placeholder="e.g. EVMs are connected to WiFi" aria-label="Fact check input" />
+            <button class="btn btn--secondary" id="btn-fact-check">Verify</button>
+          </div>
+          <div id="fact-result" class="toolkit__result" hidden></div>
+        </div>
+
+        <!-- Vision Helper -->
+        <div class="toolkit__card">
+          <h4>📸 Snap & Solve (Document Scanner)</h4>
+          <p>Upload a photo of an ECI form (Form 6, EPIC card) to understand it.</p>
+          <div class="input-row">
+            <input type="file" id="vision-input" accept="image/*" class="input" aria-label="Upload document image" />
+            <button class="btn btn--secondary" id="btn-vision">Scan Document</button>
+          </div>
+          <div id="vision-result" class="toolkit__result" hidden></div>
+        </div>
+
+      </div>
+
+      <!-- EVM Simulator Section -->
+      <div class="evm-simulator" aria-label="EVM Simulator">
+        <h3 class="evm__title">🎛️ Practice on the EVM Simulator</h3>
+        <p class="evm__desc">Press the blue button for a candidate. Listen for the beep and watch the VVPAT slip!</p>
+        <div class="evm__machine">
+          <div class="evm__ballot-unit" id="evm-bu">
+            <!-- Buttons injected via JS -->
+          </div>
+          <div class="evm__vvpat">
+            <div class="vvpat__window">
+              <div class="vvpat__slip" id="vvpat-slip" hidden>
+                <div class="vvpat__sn" id="vvpat-sn">1</div>
+                <div class="vvpat__name" id="vvpat-name">Candidate</div>
+                <div class="vvpat__symbol" id="vvpat-symbol">🌸</div>
+              </div>
+            </div>
+            <div class="vvpat__status" id="vvpat-status">READY</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Next CTA -->
       <div class="ballot__cta">
         <button class="btn btn--primary btn--lg" id="btn-to-quiz" aria-label="Take the Civic DNA quiz">

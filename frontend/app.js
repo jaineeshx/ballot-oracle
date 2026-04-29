@@ -161,6 +161,8 @@ async function fetchBallot(pin_code, state_name) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     state.ballot = await res.json();
     renderBallot(state.ballot);
+    renderMap(state.ballot);
+    renderEVMSimulator(state.ballot);
     showSection('ballot');
   } catch (err) {
     console.error(err);
@@ -550,6 +552,140 @@ function bindEvents() {
   });
 }
 
+// ── Voting Day Toolkit ────────────────────────────────────────────────────────
+function renderMap(data) {
+  const addressStr = `${data.polling_location || ''}, ${state.pin_code}, ${state.state_name}, India`;
+  $('map-address').textContent = addressStr;
+  const mapContainer = $('map-container');
+  // Free Google Maps embed (no API key needed for basic query)
+  mapContainer.innerHTML = `<iframe width="100%" height="300" style="border:0" loading="lazy" allowfullscreen src="https://www.google.com/maps/embed/v1/place?q=${encodeURIComponent(addressStr)}"></iframe>`;
+}
+
+function initToolkit() {
+  const btnFact = $('btn-fact-check');
+  const inputFact = $('fact-input');
+  const resFact = $('fact-result');
+
+  btnFact.addEventListener('click', async () => {
+    const claim = inputFact.value.trim();
+    if (!claim) return;
+    resFact.hidden = false;
+    resFact.className = 'toolkit__result';
+    resFact.textContent = '🕵️ Verifying with ECI guidelines...';
+    try {
+      const res = await fetch(`${API}/fact-check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ claim }),
+      });
+      if (!res.ok) throw new Error('Network error');
+      const data = await res.json();
+      resFact.innerHTML = `<strong>Verdict: ${data.verdict}</strong><br/>${data.explanation}<br/><small><em>Ref: ${data.official_rule}</em></small>`;
+      resFact.classList.add(data.verdict === 'TRUE' ? 'true' : 'false');
+    } catch (e) {
+      resFact.textContent = 'Failed to verify fact check.';
+    }
+  });
+
+  const btnVision = $('btn-vision');
+  const inputVision = $('vision-input');
+  const resVision = $('vision-result');
+
+  btnVision.addEventListener('click', async () => {
+    const file = inputVision.files[0];
+    if (!file) return;
+    resVision.hidden = false;
+    resVision.className = 'toolkit__result';
+    resVision.textContent = '📸 Analyzing document with Gemini Vision...';
+    
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const base64Str = e.target.result.split(',')[1];
+      try {
+        const res = await fetch(`${API}/vision-helper`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_base64: base64Str, mime_type: file.type }),
+        });
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        resVision.innerHTML = `<strong>Identified: ${data.document_type}</strong><br/>${data.explanation}<br/><br/><strong>Next Steps:</strong> ${data.action_required}`;
+        resVision.classList.add('true');
+      } catch (err) {
+        resVision.textContent = 'Vision analysis failed. Ensure server has Gemini Key.';
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderEVMSimulator(data) {
+  const bu = $('evm-bu');
+  const vvpatSlip = $('vvpat-slip');
+  const vvpatName = $('vvpat-name');
+  const vvpatSymbol = $('vvpat-symbol');
+  const vvpatStatus = $('vvpat-status');
+  
+  bu.innerHTML = '';
+  // Use candidates from the first race
+  const candidates = data.races[0]?.candidates || [{name: 'NOTA', symbol: '❌'}];
+  
+  candidates.forEach((cand, idx) => {
+    const row = el('div', 'evm__button-row');
+    row.innerHTML = `
+      <span class="evm__cand-name">${idx+1}. ${cand.name} (${cand.party || 'IND'}) ${cand.symbol || '🔲'}</span>
+      <div class="evm__led" id="led-${idx}"></div>
+      <button class="evm__btn" aria-label="Vote for ${cand.name}"></button>
+    `;
+    const btn = row.querySelector('.evm__btn');
+    const led = row.querySelector('.evm__led');
+    
+    btn.addEventListener('click', () => {
+      if (bu.classList.contains('voting')) return; // Disable multiple clicks
+      bu.classList.add('voting');
+      
+      // Play BEEP (using browser AudioContext to avoid external assets)
+      const actx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = actx.createOscillator();
+      const gain = actx.createGain();
+      osc.connect(gain);
+      gain.connect(actx.destination);
+      osc.type = 'square';
+      osc.frequency.value = 1000;
+      gain.gain.setValueAtTime(0.1, actx.currentTime);
+      osc.start();
+      osc.stop(actx.currentTime + 7); // Beeps for 7 seconds exactly
+      
+      led.classList.add('on');
+      vvpatStatus.textContent = "PRINTING VVPAT...";
+      vvpatStatus.style.color = "yellow";
+      
+      vvpatName.textContent = cand.name;
+      vvpatSymbol.textContent = cand.symbol || '🔲';
+      vvpatSlip.hidden = false;
+      vvpatSlip.classList.add('printing');
+      vvpatSlip.classList.remove('dropping');
+      
+      // 7 seconds later, slip drops
+      setTimeout(() => {
+        led.classList.remove('on');
+        vvpatSlip.classList.remove('printing');
+        vvpatSlip.classList.add('dropping');
+        vvpatStatus.textContent = "RECORDED";
+        vvpatStatus.style.color = "lime";
+        
+        // Reset after drop
+        setTimeout(() => {
+          vvpatSlip.hidden = true;
+          bu.classList.remove('voting');
+          vvpatStatus.textContent = "READY";
+        }, 500);
+      }, 7000);
+    });
+    bu.appendChild(row);
+  });
+}
+
 // ── Chatbot ───────────────────────────────────────────────────────────────────
 function initChatbot() {
   const toggle  = $('chatbot-toggle');
@@ -612,6 +748,7 @@ function init() {
   initCanvas();
   bindEvents();
   initChatbot();
+  initToolkit();
 
   // Verify backend health
   fetch(`${API}/health`)

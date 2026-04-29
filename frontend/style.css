@@ -696,5 +696,126 @@ img { max-width: 100%; display: block; }
   transition: background 0.2s;
 }
 .chatbot__send:hover { background: var(--brand-dark, #7c3aed); }
+/* ── Voting Day Toolkit ──────────────────────────────────────────────────────── */
+.toolkit {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  margin: 3rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.toolkit__title { font-size: 1.4rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+.toolkit__map, .toolkit__card {
+  background: var(--surface-2);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+}
+.map-container { width: 100%; height: 300px; margin-top: 1rem; border-radius: 0.5rem; overflow: hidden; background: #2a2a35; }
+.input-row { display: flex; gap: 0.5rem; margin-top: 1rem; }
+.toolkit__result { margin-top: 1rem; padding: 1rem; background: var(--bg); border-left: 3px solid var(--brand); border-radius: 0.3rem; font-size: 0.9rem; }
+.toolkit__result.true { border-color: #10b981; }
+.toolkit__result.false { border-color: #ef4444; }
 
+/* ── EVM Simulator ───────────────────────────────────────────────────────────── */
+.evm-simulator {
+  background: #111;
+  border: 2px solid #333;
+  border-radius: 1rem;
+  padding: 2rem;
+  margin: 3rem 0;
+  text-align: center;
+}
+.evm__title { color: #fff; font-size: 1.5rem; margin-bottom: 0.5rem; }
+.evm__desc { color: #aaa; font-size: 0.9rem; margin-bottom: 2rem; }
+.evm__machine {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* Balloting Unit */
+.evm__ballot-unit {
+  background: #eaeaea;
+  border: 4px solid #b0b0b0;
+  border-radius: 8px;
+  padding: 1rem;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.evm__button-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.evm__cand-name { color: #000; font-weight: 600; font-size: 0.9rem; flex: 1; text-align: left; padding-left: 0.5rem; }
+.evm__led { width: 12px; height: 12px; border-radius: 50%; background: #440000; margin: 0 1rem; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
+.evm__led.on { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
+.evm__btn {
+  width: 40px;
+  height: 30px;
+  background: #1e3a8a;
+  border: 2px solid #000;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.evm__btn:active { transform: translateY(2px); }
+
+/* VVPAT */
+.evm__vvpat {
+  background: #333;
+  border: 4px solid #222;
+  border-radius: 8px;
+  padding: 1rem;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.vvpat__window {
+  width: 200px;
+  height: 250px;
+  background: #000;
+  border: 5px solid #111;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+}
+.vvpat__slip {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  background: #fff;
+  color: #000;
+  padding: 1rem;
+  text-align: center;
+  font-family: monospace;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  transition: top 0.5s ease-in-out;
+}
+.vvpat__slip.printing { top: 10%; }
+.vvpat__slip.dropping { top: 110%; transition: top 0.3s ease-in; }
+.vvpat__sn { font-size: 1.2rem; font-weight: bold; }
+.vvpat__name { font-size: 0.9rem; margin: 0.5rem 0; font-weight: bold; }
+.vvpat__symbol { font-size: 2rem; }
+.vvpat__status {
+  margin-top: 1rem;
+  color: #0f0;
+  font-family: monospace;
+  font-size: 0.9rem;
+  text-shadow: 0 0 5px #0f0;
+}
 

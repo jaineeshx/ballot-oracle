@@ -141,6 +141,13 @@ class TranslateRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=1000)
     target_language: str = Field(..., min_length=2, max_length=30)
 
+class FactCheckRequest(BaseModel):
+    claim: str = Field(..., min_length=5, max_length=1000)
+
+class VisionRequest(BaseModel):
+    image_base64: str = Field(...)
+    mime_type: str = Field(default="image/jpeg")
+
 # ── AI Engine ─────────────────────────────────────────────────────────────────
 async def ask_ai(prompt: str, expect_json: bool = True) -> str:
     """
@@ -539,6 +546,59 @@ async def election_calendar() -> dict:
         "next_major": "Bihar Legislative Assembly Elections — Late 2025",
         "source": "Election Commission of India (eci.gov.in)",
     }
+
+@app.post("/api/fact-check")
+async def fact_check(req: FactCheckRequest) -> dict:
+    """Analyze a political claim or WhatsApp forward for misinformation."""
+    prompt = f"""
+You are an expert fact-checker for the Election Commission of India. Analyze the following claim about Indian elections, voting rules, or EVMs:
+"{req.claim}"
+
+Determine if it is TRUE, FALSE, or MISLEADING based on official ECI guidelines.
+
+Return JSON ONLY:
+{{
+  "verdict": "FALSE / TRUE / MISLEADING",
+  "explanation": "2-3 sentences explaining the actual truth.",
+  "official_rule": "Quote or summarize the relevant ECI rule."
+}}
+"""
+    raw = await ask_ai(prompt)
+    return _parse(raw)
+
+@app.post("/api/vision-helper")
+async def vision_helper(req: VisionRequest) -> dict:
+    """Use Gemini 1.5 Flash multimodal to analyze an uploaded election document."""
+    if not _gemini_model:
+        raise HTTPException(503, "Vision requires Gemini AI, which is not configured.")
+    
+    try:
+        # Construct the multimodal payload
+        prompt = """
+You are an ECI assistant helping a first-time voter understand this document/image. 
+Identify what this document is (e.g., Form 6, EPIC card, Polling Slip, EVM machine). 
+Explain in very simple terms what they need to do with it or how to use it.
+
+Return JSON ONLY:
+{
+  "document_type": "Name of document/object",
+  "explanation": "2-3 simple sentences explaining what this is.",
+  "action_required": "What the voter should do next."
+}
+"""
+        import base64
+        image_data = base64.b64decode(req.image_base64)
+        
+        # We need to use the generative model directly with the image parts
+        contents = [
+            prompt,
+            {"mime_type": req.mime_type, "data": image_data}
+        ]
+        resp = _gemini_model.generate_content(contents)
+        return _parse(resp.text)
+    except Exception as exc:
+        logger.error("Vision API failed: %s", exc)
+        raise HTTPException(500, "Failed to analyze image.")
 
 # ── Error Handlers ────────────────────────────────────────────────────────────
 @app.exception_handler(404)

@@ -153,6 +153,26 @@ def test_voter_checklist_items(): assert len(client.get("/api/voter-checklist").
 def test_election_calendar_200(): assert client.get("/api/election-calendar").status_code == 200
 def test_election_calendar_next(): assert "next_major" in client.get("/api/election-calendar").json()
 
+# ── Fact Check & Vision Helper ────────────────────────────────────────────────
+FACT = {"verdict": "FALSE", "explanation": "EVMs are not connected to wifi.", "official_rule": "ECI rule 123"}
+VISION = {"document_type": "Form 6", "explanation": "Voter registration form", "action_required": "Submit to ERO"}
+
+@patch("main.ask_ai", _mock(FACT))
+def test_fact_check_200():
+    assert client.post("/api/fact-check", json={"claim": "EVMs are hacked"}).status_code == 200
+
+@patch("main._gemini_model")
+def test_vision_helper_200(mock_model):
+    import base64
+    from unittest.mock import MagicMock
+    mock_resp = MagicMock()
+    mock_resp.text = json.dumps(VISION)
+    mock_model.generate_content.return_value = mock_resp
+    b64 = base64.b64encode(b"fakeimage").decode("utf-8")
+    r = client.post("/api/vision-helper", json={"image_base64": b64, "mime_type": "image/jpeg"})
+    assert r.status_code == 200
+    assert "document_type" in r.json()
+
 # ── 404 handler ───────────────────────────────────────────────────────────────
 def test_404(): assert client.get("/api/nonexistent").status_code == 404
 
